@@ -565,6 +565,12 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
     CIImage *ciimage = [CIImage imageWithCVImageBuffer:pixelBuffer];
     UIImage *img = [UIImage imageWithCIImage:ciimage];
+    // resize img to size of imageView
+    CGSize imageViewSize = imageView.bounds.size;
+    UIGraphicsBeginImageContextWithOptions(imageViewSize, NO, 0.0);
+    [img drawInRect:CGRectMake(0, 0, imageViewSize.width, imageViewSize.height)];
+    img = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
     dispatch_async(dispatch_get_main_queue(), ^{
         self->imageView.image = img;
     });
