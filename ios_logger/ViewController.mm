@@ -8,6 +8,7 @@
 //--------------------------------------------
 
 #import "ViewController.h"
+#import "theta_capture.h"
 
 @interface ViewController ()
 {
@@ -89,7 +90,7 @@
     [self magnetSwChanged:magnetSwitch];
     //******************************
     session = [AVCaptureSession new];
-
+    
     device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
     
     BOOL testUltraWideCamera = TRUE;
@@ -197,9 +198,9 @@
 
     device.activeVideoMinFrameDuration = CMTimeMake(1, FPS);
     device.activeVideoMaxFrameDuration = CMTimeMake(1, FPS);
-
+    
     if (!testUltraWideCamera){
-    [device setFocusModeLockedWithLensPosition:lensPosition completionHandler:nil];
+        [device setFocusModeLockedWithLensPosition:lensPosition completionHandler:nil];
     }
     [device unlockForConfiguration];
     
@@ -245,7 +246,7 @@
     //-------
 
     [self segmentedControlValueChanged:segmentedControl];
-
+    
 }
 
 - (void)viewWillDisappear:(BOOL)animated{
@@ -583,10 +584,61 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     runTimeLabel.text = timeStr;
 }
 
+- (void)showAlert:(NSString*)title Message:(NSString*)message
+{
+    UIAlertController * alert = [UIAlertController alertControllerWithTitle:title message:message preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction* okButton = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action){}];
+    [alert addAction:okButton];
+    [self presentViewController:alert animated:YES completion:nil];
+}
+
+NSString *serialNumber = @"YN12100631";
+
+- (void)startThetaCapture{
+    ThetaOSC *theta = [[ThetaOSC alloc] initWithSerial:serialNumber verbose:YES];
+
+    NSLog(@"Theta initialized");
+    [theta info];
+    NSLog(@"Theta info updated");
+    [theta state];
+    NSLog(@"Theta state updated");
+
+    [theta setTimelapseVideoMode];
+    NSLog(@"Theta state updated");
+    
+    NSDictionary *res = [theta startCapture];
+    // if state 'done' in response, popup message box to user
+    if ([res[@"state"] isEqualToString:@"done"]){
+        [self showAlert:@"Sucess" Message:@"Start capture"];
+    }
+    else{
+        [self showAlert:@"Fail" Message:@"Start capture"];
+    }
+}
+
+- (void)stopThetaCapture{
+    ThetaOSC *theta = [[ThetaOSC alloc] initWithSerial:serialNumber verbose:YES];
+
+    NSDictionary *res = [theta stopCapture];
+    if ([res[@"state"] isEqualToString:@"done"]){
+        [self showAlert:@"Sucess" Message:@"Stop capture"];
+    }
+    else{
+        [self showAlert:@"Fail" Message:@"Stop capture"];
+    }
+}
+
 - (IBAction)toggleButton:(id)sender
 {
+    BOOL useThetaCapture = NO;
     if (!isRecording && !isStarted)
     {
+        if (useThetaCapture)
+        {
+            // start theta capture
+            [self startThetaCapture];
+        }
+        
         isStarted = YES;
         
         if (!_timer) {
@@ -635,6 +687,11 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     else
     if (!isStarted)
     {
+        if  (useThetaCapture)
+        {
+            [self stopThetaCapture];
+        }
+        
         isRecording = NO;
         
         if ([_timer isValid]) {
