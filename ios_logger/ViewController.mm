@@ -198,8 +198,15 @@
     device.activeVideoMinFrameDuration = CMTimeMake(1, FPS);
     device.activeVideoMaxFrameDuration = CMTimeMake(1, FPS);
 
+    if (!testUltraWideCamera){
     [device setFocusModeLockedWithLensPosition:lensPosition completionHandler:nil];
+    }
     [device unlockForConfiguration];
+    
+    AVCaptureDeviceFormat *format = device.activeFormat;
+    for (AVFrameRateRange *range in format.videoSupportedFrameRateRanges) {
+        printf("min: %f, max: %f\n", range.minFrameRate, range.maxFrameRate);
+    }
     
     NSString *mediaType = AVMediaTypeVideo;
     [AVCaptureDevice requestAccessForMediaType:mediaType completionHandler:^(BOOL granted) {
