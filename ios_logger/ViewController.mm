@@ -804,6 +804,25 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
             }
             break;
         case 3:
+            reduseFpsInNTimes = 1;
+            if(arSession != nil)
+            {
+                arSession = nil;
+                afSlider.hidden = NO;
+                afLabel.hidden = NO;
+                if((device.focusMode == AVCaptureFocusModeLocked) && isAf){
+                    isAf = !isAf;
+                    [self toggleAfButton:afButton];
+                }
+            }
+            if([session canSetSessionPreset:AVCaptureSessionPreset3840x2160])
+                session.sessionPreset = AVCaptureSessionPreset3840x2160;
+            if(![session isRunning])
+            {
+                [session startRunning];
+            }
+            break;
+        case 4:
             afSlider.hidden = YES;
             afLabel.hidden = YES;
             if([session isRunning])
