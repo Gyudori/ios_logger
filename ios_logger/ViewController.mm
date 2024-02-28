@@ -92,6 +92,80 @@
 
     device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
     
+    BOOL testUltraWideCamera = TRUE;
+    
+    // print all device formats
+    AVCaptureDeviceDiscoverySession *deviceSession = [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:@[AVCaptureDeviceTypeBuiltInUltraWideCamera] mediaType:AVMediaTypeVideo position:AVCaptureDevicePositionUnspecified];
+    
+    for (AVCaptureDevice *device2 in deviceSession.devices) {
+        for (AVCaptureDeviceFormat *format in device2.formats) {
+            for (AVFrameRateRange *range in format.videoSupportedFrameRateRanges) {
+                // print device format
+                printf("format: %s\n", format.description.UTF8String);
+//                if (range.maxFrameRate == 60) {
+//                    device = device2;
+//                    break;
+//                }
+            }
+        }
+    }
+    if (testUltraWideCamera) {
+        AVCaptureDeviceDiscoverySession *deviceSession = [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:@[AVCaptureDeviceTypeBuiltInUltraWideCamera] mediaType:AVMediaTypeVideo position:AVCaptureDevicePositionUnspecified];
+        
+        device = [deviceSession.devices firstObject];
+        // print available fps
+        AVCaptureDeviceFormat *format = device.activeFormat;
+        printf("selected format: %s\n", format.description.UTF8String);
+        
+        BOOL setFixedExposureTime = TRUE;
+        if (setFixedExposureTime){
+            // set exposure custom duration with auto iso
+            [device lockForConfiguration:nil];
+            printf("current iso: %f\n", device.ISO);
+            [device setExposureModeCustomWithDuration:CMTimeMake(1, 100) ISO:100 completionHandler:nil];
+            [device unlockForConfiguration];
+            
+            printf("min exposure time: %f, max: %f\n", CMTimeGetSeconds(format.minExposureDuration), CMTimeGetSeconds(format.maxExposureDuration));
+        }
+        
+        // set auto exposed
+        [device lockForConfiguration:nil];
+        int switchExposureMode = -1;
+        if (switchExposureMode == 0) {
+            if ([device isExposureModeSupported:AVCaptureExposureModeLocked]) {
+                [device setExposureMode:AVCaptureExposureModeLocked];
+                // iso: locekd, exposure: locked
+            } else {
+                printf("exposure mode AVCaptureExposureModeLocked not supported\n");
+            }
+        } else if (switchExposureMode == 1){
+            if ([device isExposureModeSupported:AVCaptureExposureModeAutoExpose]) {
+                [device setExposureMode:AVCaptureExposureModeAutoExpose];
+                // iso: locked, exposure: locked
+                // Note: iso locked with the first frame
+            } else {
+                printf("exposure mode AVCaptureExposureModeAutoExpose not supported\n");
+            }
+        } else if (switchExposureMode == 2){
+            if ([device isExposureModeSupported:AVCaptureExposureModeContinuousAutoExposure]) {
+                [device setExposureMode:AVCaptureExposureModeContinuousAutoExposure];
+                // iso: unlocked, exposure: locked
+            } else {
+                printf("exposure mode AVCaptureExposureModeContinuousAutoExposure not supported\n");
+            }
+        } else if (switchExposureMode == 3){
+            if ([device isExposureModeSupported:AVCaptureExposureModeCustom]) {
+                [device setExposureMode:AVCaptureExposureModeCustom];
+                // iso: locekd, exposure: locked
+            } else {
+                printf("exposure mode AVCaptureExposureModeCustom not supported\n");
+            }
+        }
+
+        [device unlockForConfiguration];
+        
+    }
+    
     NSError *error = nil;
     input = [AVCaptureDeviceInput deviceInputWithDevice:device error:&error];
     if (!input){
