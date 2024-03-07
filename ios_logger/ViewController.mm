@@ -594,26 +594,33 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 NSString *serialNumber = @"YN12100631";
 
-- (void)startThetaCapture{
-    ThetaOSC *theta = [[ThetaOSC alloc] initWithSerial:serialNumber verbose:YES];
-
-    NSLog(@"Theta initialized");
-    [theta info];
-    NSLog(@"Theta info updated");
-    [theta state];
-    NSLog(@"Theta state updated");
-
-    [theta setTimelapseVideoMode];
-    NSLog(@"Theta state updated");
-    
-    NSDictionary *res = [theta startCapture];
-    // if state 'done' in response, popup message box to user
-    if ([res[@"state"] isEqualToString:@"done"]){
-        [self showAlert:@"Sucess" Message:@"Start capture"];
+- (BOOL)checkResponse:(NSDictionary*)response{
+    if ([response[@"state"] isEqualToString:@"done"]){
+        [self showAlert:@"Sucess" Message:@"Theta control"];
+        return YES;
     }
     else{
-        [self showAlert:@"Fail" Message:@"Start capture"];
+        [self showAlert:@"Fail" Message:@"Theta control"];
+        return NO;
     }
+}
+
+- (void)startThetaCapture{
+    ThetaOSC *theta = [[ThetaOSC alloc] initWithSerial:serialNumber verbose:YES];
+    NSLog(@"Theta initialized");
+    
+    if (![self checkResponse:[theta info]])
+        return;
+    NSLog(@"Theta info updated");
+    
+    if (![self checkResponse:[theta state]])
+        return;
+    NSLog(@"Theta state updated");
+    
+    [theta setTimelapseVideoMode];
+    
+    if (![self checkResponse:[theta startCapture]])
+        return;
 }
 
 - (void)stopThetaCapture{
@@ -635,8 +642,13 @@ NSString *serialNumber = @"YN12100631";
     {
         if (useThetaCapture)
         {
-            // start theta capture
-            [self startThetaCapture];
+            try {
+                // start theta capture
+                [self startThetaCapture];
+            }
+            catch (const std::exception& e) {
+                NSLog(@"Error: %s", e.what());
+            }
         }
         
         isStarted = YES;
@@ -689,7 +701,12 @@ NSString *serialNumber = @"YN12100631";
     {
         if  (useThetaCapture)
         {
-            [self stopThetaCapture];
+            try {
+                [self stopThetaCapture];
+            }
+            catch (const std::exception& e) {
+                NSLog(@"Error: %s", e.what());
+            }
         }
         
         isRecording = NO;

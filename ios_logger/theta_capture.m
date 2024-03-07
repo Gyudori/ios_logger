@@ -77,9 +77,7 @@ static NSString *const BASE_URL = @"http://192.168.1.1/osc/%@";
 
     __block NSDictionary *responseDict = nil;
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-    
-    // handle exception when data is nil
-    
+        
     NSURLSessionDataTask *task = [self.session dataTaskWithRequest:request completionHandler:^(NSData * data, NSURLResponse *response, NSError *error) {
         if (error) {
             NSLog(@"Error in %@ request: %@", post ? @"POST" : @"GET", error);
@@ -91,9 +89,10 @@ static NSString *const BASE_URL = @"http://192.168.1.1/osc/%@";
         }
         dispatch_semaphore_signal(semaphore);
     }];
-
+    
     [task resume];
-    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+    // timeout 3 seconds
+    dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC));
 
     return responseDict;
 }
