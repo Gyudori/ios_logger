@@ -185,11 +185,11 @@ static NSString *const BASE_URL = @"http://192.168.1.1/osc/%@";
 - (void)setTimelapseVideoMode {
     NSLog(@"set_timelapse_video_mode");
     [self setCaptureMode:@"video"];
-    [self setOptions:@{@"videoStitching": @"onboard"}];
+    [self setOptions:@{@"videoStitching": @"none"}];
     [self setOptions:@{@"_topBottomCorrection": @"Apply"}];
     NSLog(@"%@", [self getOptions:@"videoStitching"]);
 
-    [self setOptions:@{@"fileFormat": @{@"_frameRate": @2, @"_bitRate": @8000000, @"_codec": @"H.264/MPEG-4 AVC", @"height": @2880, @"type": @"mp4", @"width": @5760}}];
+    [self setOptions:@{@"fileFormat": @{@"_frameRate": @5, @"_bitRate": @80000000, @"_codec": @"H.264", @"height": @2880, @"type": @"mp4", @"width": @5760}}];
 }
 
 - (void)setPictureMode {
